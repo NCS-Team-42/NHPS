@@ -1,56 +1,46 @@
 package com.team42.NHPS.api.patients.data;
 
-import java.io.Serializable;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import java.io.Serial;
+import java.io.Serializable;
+import java.sql.Date;
 
 @Entity
 @Table(name = "patient")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class PatientEntity implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	@Id
-    @GeneratedValue
-    private long id;
+	@GeneratedValue
+	private long id;
 
-    @Column(nullable = false)
-    private String userId;
-    
-    @Column(nullable = false, unique = true)
-    private String albumId;
- 
-    @Column(nullable = false, length = 225)
-    private String title;
+	@Column(name = "user_id", nullable = false)
+	private String userId;
 
-	public String getUserId() {
-		return userId;
-	}
+	@Column(name = "nric", nullable = false)
+	private String nric;
 
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
+	@Column(name = "first_name", nullable = false)
+	private String firstName;
 
-	public String getAlbumId() {
-		return albumId;
-	}
+	@Column(name = "last_name", nullable = false)
+	private String lastName;
 
-	public void setAlbumId(String albumId) {
-		this.albumId = albumId;
-	}
+	@Column(name = "email", unique = true)
+	private String email;
 
-	public String getTitle() {
-		return title;
-	}
+	@Column(name = "date_of_birth", nullable = false)
+	private Date dob;
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
- 
-    
-
+	@Column(name = "phone_number", nullable = false)
+	private String phoneNumber;
 }

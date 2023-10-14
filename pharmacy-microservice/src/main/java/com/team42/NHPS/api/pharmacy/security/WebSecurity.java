@@ -1,4 +1,4 @@
-package com.team42.NHPS.api.patients.security;
+package com.team42.NHPS.api.pharmacy.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -27,14 +27,13 @@ public class WebSecurity {
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         // Configure AuthenticationManagerBuilder
         AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
- 
      
         // Get AuthenticationManager
         AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
         http
                 .cors().and()
                 .csrf().disable().authorizeHttpRequests()
-                .requestMatchers("/patients/ip").permitAll()
+                .requestMatchers("/pharmacies/ip").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
 

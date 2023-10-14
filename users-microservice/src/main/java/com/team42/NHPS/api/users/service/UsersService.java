@@ -6,7 +6,7 @@
 package com.team42.NHPS.api.users.service;
 
 import com.team42.NHPS.api.users.shared.UserDto;
-import com.team42.NHPS.api.users.ui.model.AlbumResponseModel;
+import com.team42.NHPS.api.users.ui.model.PatientsResponseModel;
 
 import java.util.List;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,7 +15,6 @@ public interface UsersService  extends UserDetailsService {
     public List<UserDto> getUsers();
     public UserDto createUser(UserDto userDto);
     public UserDto getUserByEmail(String email);
-    public UserDto getUserByUserId(String userId);
     public void deleteUser(String userId, String authorizationHeader);
-    public List<AlbumResponseModel> getUserAlbums(String jwt);
+//    public List<PatientsResponseModel> getUserAlbums(String jwt);
 }

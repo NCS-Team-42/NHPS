@@ -36,7 +36,7 @@ import com.team42.NHPS.api.users.data.UsersRepository;
 import com.team42.NHPS.api.users.shared.JwtUtil;
 import com.team42.NHPS.api.users.shared.UserDto;
 import com.team42.NHPS.api.users.shared.UsersServiceException;
-import com.team42.NHPS.api.users.ui.model.AlbumResponseModel;
+import com.team42.NHPS.api.users.ui.model.PatientsResponseModel;
 
 @Service
 public class UsersServiceImpl implements UsersService {
@@ -115,14 +115,6 @@ public class UsersServiceImpl implements UsersService {
 
 	}
 
-	@Override
-	public UserDto getUserByUserId(String userId) throws UsersServiceException {
-		UserEntity userEntity = usersRepository.findByUserId(userId);
-		if (userEntity == null)
-			throw new UsersServiceException(environment.getProperty("users.exceptions.user-not-found"));
-
-		return new ModelMapper().map(userEntity, UserDto.class);
-	}
 
 	@Override
 	public List<UserDto> getUsers() {
@@ -139,24 +131,24 @@ public class UsersServiceImpl implements UsersService {
 		return returnValue;
 	}
 
-	@Override
-	public List<AlbumResponseModel> getUserAlbums(String jwt) {
-
-		String patientsUrl = environment.getProperty("patients.url");
-        logger.info("patientsUrl = " + patientsUrl);
-
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.add("Authorization", "Bearer " + jwt);
-		httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-
-		ResponseEntity<List<AlbumResponseModel>> albumsListResponse = restTemplate.exchange(patientsUrl, HttpMethod.GET,
-				new HttpEntity<>(httpHeaders), new ParameterizedTypeReference<>() {
-				});
-
-		logger.info(
-				"Patients web service endpoint called and recieved " + albumsListResponse.getBody().size() + " items");
-
-		return albumsListResponse.getBody();
-	}
+//	@Override
+//	public List<PatientsResponseModel> getUserAlbums(String jwt) {
+//
+//		String patientsUrl = environment.getProperty("patients.url");
+//        logger.info("patientsUrl = " + patientsUrl);
+//
+//		HttpHeaders httpHeaders = new HttpHeaders();
+//		httpHeaders.add("Authorization", "Bearer " + jwt);
+//		httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+//
+//		ResponseEntity<List<PatientsResponseModel>> albumsListResponse = restTemplate.exchange(patientsUrl, HttpMethod.GET,
+//				new HttpEntity<>(httpHeaders), new ParameterizedTypeReference<>() {
+//				});
+//
+//		logger.info(
+//				"Patients web service endpoint called and recieved " + albumsListResponse.getBody().size() + " items");
+//
+//		return albumsListResponse.getBody();
+//	}
 
 }

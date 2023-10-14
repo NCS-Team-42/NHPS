@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.team42.NHPS.api.users.service.UsersService;
 import com.team42.NHPS.api.users.shared.UserDto;
-import com.team42.NHPS.api.users.ui.model.AlbumResponseModel;
+import com.team42.NHPS.api.users.ui.model.PatientsResponseModel;
 import com.team42.NHPS.api.users.ui.model.CreateUserRequestModel;
 import com.team42.NHPS.api.users.ui.model.UserResponseModel;
 
@@ -43,18 +43,18 @@ import jakarta.validation.Valid;
 public class UsersController {
 
 	@Value("${token.secret}")
-	String token;
-
-	@Autowired
-	UsersService usersService;
-
-	@Autowired
-	Environment environment;
-
+	private String token;
 	@Value("${server.port}")
 	private String port;
-
+	private UsersService usersService;
+	private Environment environment;
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+	@Autowired
+	public UsersController(UsersService usersService, Environment environment) {
+		this.usersService = usersService;
+		this.environment = environment;
+	}
 
 	@PostMapping
 	public ResponseEntity<UserResponseModel> createUser(@Valid @RequestBody CreateUserRequestModel requestModel) {
@@ -69,30 +69,30 @@ public class UsersController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(returnValue);
 	}
 
-	@GetMapping("/{userId}")
-	@PostAuthorize("principal == returnObject.body.userId")
-	public ResponseEntity<UserResponseModel> getUser(@PathVariable("userId") String userId,
-			@RequestHeader("Authorization") String authorization,
-			@RequestParam(value = "fields", required = false) String fields) {
-
-		UserDto userDto = usersService.getUserByUserId(userId);
-
-		UserResponseModel returnValue = new ModelMapper().map(userDto, UserResponseModel.class);
-
-		// Include albums if requested
-		if (fields != null) {
-			String[] includeFields = fields.split(",");
-			for (String field : includeFields) {
-				if (field.trim().equalsIgnoreCase("patients")) {
-					List<AlbumResponseModel> albums = usersService.getUserAlbums(authorization);
-					returnValue.setAlbums(albums);
-					break;
-				}
-			}
-		}
-
-		return ResponseEntity.status(HttpStatus.OK).body(returnValue);
-	}
+//	@GetMapping("/{userId}")
+//	@PostAuthorize("principal == returnObject.body.userId")
+//	public ResponseEntity<UserResponseModel> getUser(@PathVariable("userId") String userId,
+//			@RequestHeader("Authorization") String authorization,
+//			@RequestParam(value = "fields", required = false) String fields) {
+//
+//		UserDto userDto = usersService.getUserByUserId(userId);
+//
+//		UserResponseModel returnValue = new ModelMapper().map(userDto, UserResponseModel.class);
+//
+//		// Include albums if requested
+//		if (fields != null) {
+//			String[] includeFields = fields.split(",");
+//			for (String field : includeFields) {
+//				if (field.trim().equalsIgnoreCase("patients")) {
+//					List<PatientsResponseModel> albums = usersService.getUserAlbums(authorization);
+//					returnValue.setAlbums(albums);
+//					break;
+//				}
+//			}
+//		}
+//
+//		return ResponseEntity.status(HttpStatus.OK).body(returnValue);
+//	}
 
 	@GetMapping()
 	public ResponseEntity<List<UserResponseModel>> getUsers(@RequestHeader("Authorization") String authorization) {
@@ -119,9 +119,9 @@ public class UsersController {
 
 	@GetMapping("/status/check")
 	public String status(@RequestHeader("Authorization") String authorizationHeader) {
-		String returnValue = "Working on port " + port + " with token " + token + ". Token from environment "
-				+ environment.getProperty("token.secret") + "authorizationHeader = " + authorizationHeader
-				+ ". My application environment = " + environment.getProperty("myapplication.environment");
+		String returnValue = "Working on port " + port + " with token " + token + ".\nToken from environment "
+				+ environment.getProperty("token.secret") + "\nAuthorizationHeader = " + authorizationHeader
+				+ ".\nMy application environment = " + environment.getProperty("myapplication.environment");
 		log.info(returnValue);
 		return returnValue;
 	}

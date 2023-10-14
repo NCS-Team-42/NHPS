@@ -1,4 +1,4 @@
-package com.team42.NHPS.api.patients.security;
+package com.team42.NHPS.api.pharmacy.security;
 
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
