@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/pharmacies")
@@ -36,6 +38,14 @@ public class PharmacyController {
         this.pharmacyService = pharmacyService;
         this.environment = environment;
         this.modelMapper = modelMapper;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PharmacyResponseModel>> getAllPharmacy() {
+        List<PharmacyDto> pharmacyDtoList = pharmacyService.getAllPharmacy();
+        List<PharmacyResponseModel> foundPharmacies = new ArrayList<>();
+        pharmacyDtoList.forEach(pharmacyDto -> foundPharmacies.add(modelMapper.map(pharmacyDto, PharmacyResponseModel.class)));
+        return ResponseEntity.status(HttpStatus.OK).body(foundPharmacies);
     }
 
     @GetMapping("/{pharmacyId}")

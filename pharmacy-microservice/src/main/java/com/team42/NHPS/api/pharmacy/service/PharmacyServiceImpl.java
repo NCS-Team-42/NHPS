@@ -8,6 +8,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -34,5 +36,15 @@ public class PharmacyServiceImpl implements PharmacyService {
         pharmacyEntity.setPharmacyId(UUID.randomUUID().toString());
         PharmacyEntity foundPharmacy = pharmacyRepository.save(pharmacyEntity);
         return modelMapper.map(foundPharmacy, PharmacyDto.class);
+    }
+
+    @Override
+    public List<PharmacyDto> getAllPharmacy() {
+        List<PharmacyDto> pharmacyDtoList = new ArrayList<>();
+        Iterable<PharmacyEntity> pharmacyEntityIterator = pharmacyRepository.findAll();
+        if (!pharmacyEntityIterator.iterator().hasNext())
+            throw new ResourceNotFoundException("Pharmacies", "all", null);
+        pharmacyEntityIterator.forEach(pharmacyEntity -> pharmacyDtoList.add(modelMapper.map(pharmacyEntity, PharmacyDto.class)));
+        return pharmacyDtoList;
     }
 }
