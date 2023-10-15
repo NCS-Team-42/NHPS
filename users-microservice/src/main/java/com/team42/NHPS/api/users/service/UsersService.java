@@ -6,7 +6,6 @@
 package com.team42.NHPS.api.users.service;
 
 import com.team42.NHPS.api.users.shared.UserDto;
-import com.team42.NHPS.api.users.ui.model.PatientsResponseModel;
 
 import java.util.List;
 import org.springframework.security.core.userdetails.UserDetailsService;

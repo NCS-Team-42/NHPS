@@ -5,11 +5,11 @@
  */
 package com.team42.NHPS.api.users.ui.controllers;
 
-import java.lang.reflect.Type;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
-
+import com.team42.NHPS.api.users.service.UsersService;
+import com.team42.NHPS.api.users.shared.UserDto;
+import com.team42.NHPS.api.users.ui.model.CreateUserRequestModel;
+import com.team42.NHPS.api.users.ui.model.UserResponseModel;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.slf4j.Logger;
@@ -19,24 +19,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.team42.NHPS.api.users.service.UsersService;
-import com.team42.NHPS.api.users.shared.UserDto;
-import com.team42.NHPS.api.users.ui.model.PatientsResponseModel;
-import com.team42.NHPS.api.users.ui.model.CreateUserRequestModel;
-import com.team42.NHPS.api.users.ui.model.UserResponseModel;
-
-import jakarta.validation.Valid;
+import java.lang.reflect.Type;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")

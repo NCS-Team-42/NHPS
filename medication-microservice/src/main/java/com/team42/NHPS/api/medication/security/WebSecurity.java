@@ -1,10 +1,9 @@
-package com.team42.NHPS.api.pharmacy.security;
+package com.team42.NHPS.api.medication.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -34,7 +33,6 @@ public class WebSecurity {
         http
                 .cors().and()
                 .csrf().disable().authorizeHttpRequests()
-                .requestMatchers(HttpMethod.GET, "/pharmacies/**").permitAll()
                 .requestMatchers("/pharmacies/ip").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()

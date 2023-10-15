@@ -7,24 +7,19 @@ package com.team42.NHPS.api.users.service;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import com.team42.NHPS.api.users.exception.ResourceNotFoundException;
+import com.team42.NHPS.api.users.ui.model.PharmacyResponseModel;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.modelmapper.convention.MatchingStrategies;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -37,7 +32,8 @@ import com.team42.NHPS.api.users.data.UsersRepository;
 import com.team42.NHPS.api.users.shared.JwtUtil;
 import com.team42.NHPS.api.users.shared.UserDto;
 import com.team42.NHPS.api.users.shared.UsersServiceException;
-import com.team42.NHPS.api.users.ui.model.PatientsResponseModel;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @Service
 public class UsersServiceImpl implements UsersService {
@@ -70,10 +66,14 @@ public class UsersServiceImpl implements UsersService {
         userEntity.setUserId(UUID.randomUUID().toString());
         userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(userDto.getPassword()));
 
+        PharmacyResponseModel pharmacyResponseModel = getPharmacy(userDto.getPharmacyId());
         usersRepository.save(userEntity);
 
-        return modelMapper.map(userEntity, UserDto.class);
+        UserDto foundUserDto = modelMapper.map(userEntity, UserDto.class);
+        foundUserDto.setPharmacyName(pharmacyResponseModel.getPharmacyName());
+        return foundUserDto;
     }
+
 
     @Override
     public UserDto getUserByEmail(String email) {
@@ -136,6 +136,15 @@ public class UsersServiceImpl implements UsersService {
         List<UserDto> returnValue = new ModelMapper().map(userEntities, listType);
 
         return returnValue;
+    }
+
+    private PharmacyResponseModel getPharmacy(String pharmacyId) {
+        WebClient client = WebClient.create(environment.getProperty("pharmacy.url"));
+        WebClient.UriSpec<WebClient.RequestBodySpec> uriSpec = client.method(HttpMethod.GET);
+        WebClient.RequestBodySpec bodySpec = uriSpec.uri("/" + pharmacyId);
+        WebClient.ResponseSpec responseSpec = bodySpec.retrieve();
+        Mono<PharmacyResponseModel> responseBody = responseSpec.bodyToMono(PharmacyResponseModel.class);
+        return responseBody.block();
     }
 
 //	@Override
