@@ -27,9 +27,11 @@ public class MedicationEntity implements Serializable {
     @Column(name = "name", nullable = false, unique = true)
     private String name;
     @Column(name = "description", nullable = false)
-    private String description;
-    @Column(name = "active_chemical", nullable = false)
-    private String activeChemical;
-    @Column(name = "medication_id", nullable = false)
-    private String dosage;
+    private String description; // could include side effects
+    @Column(name = "active_ingredient", nullable = false)
+    private String activeIngredient; // eg paracetamol
+    @Column(name = "dosage", nullable = false)
+    private String dosage; // eg 3mg
+    @Column(name = "instructions", nullable = false)
+    private String instructions; // eg 30 min before food
 }

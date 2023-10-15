@@ -20,13 +20,7 @@ public class PatientEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue
-	private long id;
-
-	@Column(name = "user_id", nullable = false)
-	private String userId;
-
-	@Column(name = "nric", nullable = false)
+	@Column(unique = true)
 	private String nric;
 
 	@Column(name = "first_name", nullable = false)
@@ -43,4 +37,7 @@ public class PatientEntity implements Serializable {
 
 	@Column(name = "phone_number", nullable = false)
 	private String phoneNumber;
+
+	@Column(name = "postal_code", nullable = false)
+	private String postalCode;
 }

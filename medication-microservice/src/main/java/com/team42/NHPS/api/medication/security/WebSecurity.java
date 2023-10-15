@@ -33,7 +33,7 @@ public class WebSecurity {
         http
                 .cors().and()
                 .csrf().disable().authorizeHttpRequests()
-                .requestMatchers("/pharmacies/ip").permitAll()
+                .requestMatchers("/medication/ip").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
 

@@ -11,6 +11,7 @@ public class MedicationDto {
     private String medicationId;
     private String name;
     private String description;
-    private String activeChemical;
-    private String doseage;
+    private String activeIngredient;
+    private String dosage;
+    private String instructions;
 }

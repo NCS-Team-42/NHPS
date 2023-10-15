@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class CreateMedicationRequestModel {
     private String name;
     private String description;
-    private String activeChemical;
+    private String activeIngredient;
     private String dosage;
+    private String instructions;
 }
