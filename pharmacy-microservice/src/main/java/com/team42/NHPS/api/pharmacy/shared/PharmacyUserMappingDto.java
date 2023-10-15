@@ -1,4 +1,4 @@
-package com.team42.NHPS.api.pharmacy.ui.model;
+package com.team42.NHPS.api.pharmacy.shared;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PharmacyResponseModel {
+public class PharmacyUserMappingDto {
     private String pharmacyId;
-    private String pharmacyName;
-    private String postalCode;
+    private String userId;
 }

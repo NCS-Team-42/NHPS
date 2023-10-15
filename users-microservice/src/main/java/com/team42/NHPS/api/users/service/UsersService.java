@@ -17,4 +17,5 @@ public interface UsersService  extends UserDetailsService {
     public UserDto getUserByEmail(String email);
     public void deleteUser(String userId, String authorizationHeader);
 //    public List<PatientsResponseModel> getUserAlbums(String jwt);
+    public UserDto getUserByUserId(String userId);
 }

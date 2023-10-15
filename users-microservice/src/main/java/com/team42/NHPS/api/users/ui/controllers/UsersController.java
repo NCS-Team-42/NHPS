@@ -69,16 +69,15 @@ public class UsersController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(returnValue);
 	}
 
-//	@GetMapping("/{userId}")
-//	@PostAuthorize("principal == returnObject.body.userId")
-//	public ResponseEntity<UserResponseModel> getUser(@PathVariable("userId") String userId,
-//			@RequestHeader("Authorization") String authorization,
-//			@RequestParam(value = "fields", required = false) String fields) {
-//
-//		UserDto userDto = usersService.getUserByUserId(userId);
-//
-//		UserResponseModel returnValue = new ModelMapper().map(userDto, UserResponseModel.class);
-//
+	@GetMapping("/{userId}")
+	public ResponseEntity<String> getUser(@PathVariable("userId") String userId/*,
+			@RequestHeader("Authorization") String authorization,
+			@RequestParam(value = "fields", required = false) String fields*/) {
+
+		UserDto userDto = usersService.getUserByUserId(userId);
+
+		UserResponseModel returnValue = new ModelMapper().map(userDto, UserResponseModel.class);
+
 //		// Include albums if requested
 //		if (fields != null) {
 //			String[] includeFields = fields.split(",");
@@ -90,9 +89,9 @@ public class UsersController {
 //				}
 //			}
 //		}
-//
-//		return ResponseEntity.status(HttpStatus.OK).body(returnValue);
-//	}
+
+		return ResponseEntity.status(HttpStatus.OK).body(returnValue.getFirstName() + " " + returnValue.getLastName());
+	}
 
 	@GetMapping()
 	public ResponseEntity<List<UserResponseModel>> getUsers(@RequestHeader("Authorization") String authorization) {

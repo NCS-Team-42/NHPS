@@ -2,6 +2,7 @@ package com.team42.NHPS.api.pharmacy.ui.controllers;
 
 import com.team42.NHPS.api.pharmacy.service.PharmacyService;
 import com.team42.NHPS.api.pharmacy.shared.PharmacyDto;
+import com.team42.NHPS.api.pharmacy.shared.PharmacyUserMappingDto;
 import com.team42.NHPS.api.pharmacy.ui.model.CreatePharmacyRequestModel;
 import com.team42.NHPS.api.pharmacy.ui.model.PharmacyResponseModel;
 import jakarta.validation.Valid;
@@ -18,7 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/pharmacies")
@@ -64,6 +67,12 @@ public class PharmacyController {
         return ResponseEntity.status(HttpStatus.OK).body(foundPharmacy);
     }
 
+    @PostMapping("/{pharmacyId}/user/{userId}")
+    public ResponseEntity<Map<String, String>> mapUserToPharmacy(@PathVariable String pharmacyId, @PathVariable String userId, @RequestHeader("Authorization") String authorization) {
+        Map<String, String> map = pharmacyService.mapPharmacyToUser(new PharmacyUserMappingDto(pharmacyId, userId), authorization);
+        return ResponseEntity.status(HttpStatus.OK).body(map);
+    }
+
     @GetMapping("/status/check")
     public String status(@RequestHeader("Authorization") String authorizationHeader) {
         String returnValue = "Working on port " + port + " with token " + token + ".\nToken from environment "
@@ -86,4 +95,5 @@ public class PharmacyController {
 
         return returnValue;
     }
+
 }

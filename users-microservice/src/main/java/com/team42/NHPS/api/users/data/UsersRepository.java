@@ -7,8 +7,10 @@ package com.team42.NHPS.api.users.data;
 
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.Optional;
+
 public interface UsersRepository extends CrudRepository<UserEntity, Long>{
     UserEntity findByEmail(String email);
-    UserEntity findByUserId(String userId);
+    Optional<UserEntity> findByUserId(String userId);
 }
 
