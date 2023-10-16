@@ -9,7 +9,12 @@ import java.util.List;
 public interface PrescriptionService {
 
     PrescriptionDto createPrescription(PrescriptionDto prescriptionDto, String authorization);
+
     List<PrescriptionDto> getPrescriptionByNric(String nric);
+
     MedicationResponseModel medicationCheck(String medicationId, String authorization);
+
     PharmacyResponseModel pharmacyCheck(String pharmacyId, String authorization);
+
+    String batchProcessConsumption(String nric, String authorization);
 }

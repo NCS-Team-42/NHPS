@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class InventoryEntity {
     @EmbeddedId
-    private PharmacyMedicineKey pharmacyMedicineKey;
+    private PharmacyMedicationKey pharmacyMedicationKey;
     @Column(nullable = false)
     private int quantity = 0;
     @Column(nullable = false)
@@ -24,8 +24,8 @@ public class InventoryEntity {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public class PharmacyMedicineKey {
+    public static class PharmacyMedicationKey {
         private String pharmacyId;
-        private String medicineId;
+        private String medicationId;
     }
 }

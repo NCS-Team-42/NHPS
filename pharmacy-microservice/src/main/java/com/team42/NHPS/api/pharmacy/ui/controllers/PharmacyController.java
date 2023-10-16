@@ -3,8 +3,10 @@ package com.team42.NHPS.api.pharmacy.ui.controllers;
 import com.team42.NHPS.api.pharmacy.service.PharmacyService;
 import com.team42.NHPS.api.pharmacy.shared.PharmacyDto;
 import com.team42.NHPS.api.pharmacy.shared.PharmacyUserMappingDto;
+import com.team42.NHPS.api.pharmacy.shared.PrescriptionDto;
 import com.team42.NHPS.api.pharmacy.ui.model.CreatePharmacyRequestModel;
 import com.team42.NHPS.api.pharmacy.ui.model.PharmacyResponseModel;
+import com.team42.NHPS.api.pharmacy.ui.model.UpdateInventoryRequestModel;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -71,6 +73,18 @@ public class PharmacyController {
     public ResponseEntity<Map<String, String>> mapUserToPharmacy(@PathVariable String pharmacyId, @PathVariable String userId, @RequestHeader("Authorization") String authorization) {
         Map<String, String> map = pharmacyService.mapPharmacyToUser(new PharmacyUserMappingDto(pharmacyId, userId), authorization);
         return ResponseEntity.status(HttpStatus.OK).body(map);
+    }
+
+    @PostMapping("/inventory/update")
+    public ResponseEntity<String> updateInventory(@RequestBody UpdateInventoryRequestModel updateInventoryRequestModel) {
+        log.info(updateInventoryRequestModel.toString());
+        try {
+            pharmacyService.updateInventory(updateInventoryRequestModel);
+            return ResponseEntity.ok("Update inventory successful");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Unable to update inventory");
+        }
     }
 
     @GetMapping("/status/check")

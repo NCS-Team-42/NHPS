@@ -1,12 +1,11 @@
 package com.team42.NHPS.api.pharmacy.service;
 
-import com.team42.NHPS.api.pharmacy.data.PharmacyEntity;
-import com.team42.NHPS.api.pharmacy.data.PharmacyRepository;
-import com.team42.NHPS.api.pharmacy.data.PharmacyUserMappingEntity;
-import com.team42.NHPS.api.pharmacy.data.PharmacyUserMappingRepository;
+import com.team42.NHPS.api.pharmacy.data.*;
 import com.team42.NHPS.api.pharmacy.exception.ResourceNotFoundException;
 import com.team42.NHPS.api.pharmacy.shared.PharmacyDto;
 import com.team42.NHPS.api.pharmacy.shared.PharmacyUserMappingDto;
+import com.team42.NHPS.api.pharmacy.shared.PrescriptionDto;
+import com.team42.NHPS.api.pharmacy.ui.model.UpdateInventoryRequestModel;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -25,13 +24,16 @@ public class PharmacyServiceImpl implements PharmacyService {
 
     private PharmacyRepository pharmacyRepository;
     private PharmacyUserMappingRepository pharmacyUserMappingRepository;
+    private InventoryRespository inventoryRespository;
     private ModelMapper modelMapper;
     private Environment env;
 
     @Autowired
-    public PharmacyServiceImpl(PharmacyRepository pharmacyRepository, PharmacyUserMappingRepository pharmacyUserMappingRepository, ModelMapper modelMapper, Environment env) {
+    public PharmacyServiceImpl(PharmacyRepository pharmacyRepository, PharmacyUserMappingRepository pharmacyUserMappingRepository,
+                               ModelMapper modelMapper, Environment env, InventoryRespository inventoryRespository) {
         this.pharmacyRepository = pharmacyRepository;
         this.pharmacyUserMappingRepository = pharmacyUserMappingRepository;
+        this.inventoryRespository = inventoryRespository;
         this.modelMapper = modelMapper;
         this.env = env;
     }
@@ -78,5 +80,20 @@ public class PharmacyServiceImpl implements PharmacyService {
         pharmacyUserMappingRepository.save(pharmacyUserMappingEntity);
 
         return map;
+    }
+
+    @Override
+    public void updateInventory(UpdateInventoryRequestModel updateInventoryRequestModel) { // on prescribe and dispense
+        updateInventoryRequestModel.getPrescriptionDtoList().forEach(prescriptionDto -> {
+            InventoryEntity inventoryEntity = inventoryRespository.findByPharmacyMedicationKey_PharmacyIdAndPharmacyMedicationKey_MedicationId(prescriptionDto.getPharmacyId(),
+                    prescriptionDto.getMedicationId()).orElseThrow(() -> new ResourceNotFoundException("Inventory", "pharmacy and medication", prescriptionDto.getPharmacyId() + " " +
+                    prescriptionDto.getMedicationId()));
+            if ("dispense".equals(updateInventoryRequestModel.getAction())) {
+                inventoryEntity.setQuantity(inventoryEntity.getQuantity() - prescriptionDto.getConsumptionWeekly());
+            } else if ("prescribe".equals(updateInventoryRequestModel.getAction())) {
+                inventoryEntity.setVelocityOutWeekly(inventoryEntity.getVelocityOutWeekly() + prescriptionDto.getConsumptionWeekly());
+            }
+            inventoryRespository.save(inventoryEntity);
+        });
     }
 }

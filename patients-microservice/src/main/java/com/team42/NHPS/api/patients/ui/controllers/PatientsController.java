@@ -90,6 +90,12 @@ public class PatientsController {
         return ResponseEntity.ok(prescriptionResponseModelList);
     }
 
+    @GetMapping("/process-prescription/manual/{nric}")
+    public ResponseEntity<String> processPrescriptionBatchJobManual(@PathVariable String nric, @RequestHeader("Authorization") String authorization) {
+        String returnValue = prescriptionService.batchProcessConsumption(nric, authorization);
+        return ResponseEntity.ok(returnValue);
+    }
+
     @GetMapping("/status/check")
     public String status(@RequestHeader("Authorization") String authorizationHeader) {
         String returnValue = "Working on port " + port + " with token " + token + ".\nToken from environment "
