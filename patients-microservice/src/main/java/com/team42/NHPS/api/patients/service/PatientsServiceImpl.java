@@ -4,6 +4,7 @@ import com.team42.NHPS.api.patients.data.PatientEntity;
 import com.team42.NHPS.api.patients.data.PatientsRepository;
 import com.team42.NHPS.api.patients.exception.ResourceNotFoundException;
 import com.team42.NHPS.api.patients.shared.PatientDto;
+import com.team42.NHPS.api.patients.utils.UtilService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,22 +16,24 @@ import java.util.List;
 public class PatientsServiceImpl implements PatientsService {
 
     private PatientsRepository patientsRepository;
+    private UtilService utilService;
     private ModelMapper modelMapper;
 
     @Autowired
-    public PatientsServiceImpl(PatientsRepository patientsRepository, ModelMapper modelMapper) {
+    public PatientsServiceImpl(PatientsRepository patientsRepository, ModelMapper modelMapper, UtilService utilService) {
         this.patientsRepository = patientsRepository;
+        this.utilService = utilService;
         this.modelMapper = modelMapper;
     }
 
 
     @Override
     public List<PatientDto> getAllPatients() {
-        List<PatientDto> patientDtoList = new ArrayList<>();
-        Iterable<PatientEntity> patientEntityList = patientsRepository.findAll();
-        if (!patientEntityList.iterator().hasNext()) throw new ResourceNotFoundException("Patients", "all", null);
-        patientEntityList.forEach(patientEntity -> patientDtoList.add(modelMapper.map(patientEntity, PatientDto.class)));
-        return patientDtoList;
+        Iterable<PatientEntity> patientEntityIterable = patientsRepository.findAll();
+        List<PatientEntity> patientEntityList = new ArrayList<>();
+        if (!patientEntityIterable.iterator().hasNext()) throw new ResourceNotFoundException("Patients", "all", null);
+        patientEntityIterable.forEach(patientEntityList::add);
+        return utilService.entityToDtoMapList(patientEntityList, PatientDto.class);
     }
 
     @Override

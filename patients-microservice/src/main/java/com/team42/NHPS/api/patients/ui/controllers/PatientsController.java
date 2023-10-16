@@ -3,8 +3,14 @@ package com.team42.NHPS.api.patients.ui.controllers;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.team42.NHPS.api.patients.service.PrescriptionService;
+import com.team42.NHPS.api.patients.shared.PrescriptionDto;
+import com.team42.NHPS.api.patients.ui.models.PharmacyResponseModel;
+import com.team42.NHPS.api.patients.ui.models.PrescriptionResponseModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,12 +37,14 @@ public class PatientsController {
     @Value("${server.port}")
     private String port;
     private PatientsService patientsService;
+    private PrescriptionService prescriptionService;
     private Environment environment;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    public PatientsController(PatientsService patientsService, Environment env) {
+    public PatientsController(PatientsService patientsService, PrescriptionService prescriptionService, Environment env) {
         this.patientsService = patientsService;
+        this.prescriptionService = prescriptionService;
         this.environment = env;
     }
 
@@ -59,6 +67,27 @@ public class PatientsController {
     @PostMapping
     public ResponseEntity<PatientDto> createPatient(@Valid @RequestBody PatientDto patientDto) {
         return new ResponseEntity(patientsService.createPatient(patientDto), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/prescription")
+    public ResponseEntity<PrescriptionDto> createPrescription(@Valid @RequestBody PrescriptionDto prescriptionDto, @RequestHeader("Authorization") String authorization) {
+        return new ResponseEntity<>(prescriptionService.createPrescription(prescriptionDto, authorization), HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{nric}/prescription")
+    public ResponseEntity<List<PrescriptionResponseModel>> getPrescriptionByNric(@PathVariable String nric, @RequestHeader("Authorization") String authorization) {
+        List<PrescriptionDto> prescriptionDtoList = prescriptionService.getPrescriptionByNric(nric);
+        List<PrescriptionResponseModel> prescriptionResponseModelList =
+                prescriptionDtoList.stream().map(dto -> {
+                    PrescriptionResponseModel prescriptionResponseModel = new PrescriptionResponseModel();
+                    prescriptionResponseModel.setNric(dto.getPatientNric());
+                    prescriptionResponseModel.setConsumptionWeekly(dto.getConsumptionWeekly());
+                    prescriptionResponseModel.setDoseLeft(dto.getDoseLeft());
+                    prescriptionResponseModel.setPharmacyResponseModel(prescriptionService.pharmacyCheck(dto.getPharmacyId(), authorization));
+                    prescriptionResponseModel.setMedicationResponseModel(prescriptionService.medicationCheck(dto.getMedicationId(), authorization));
+                    return prescriptionResponseModel;
+                }).collect(Collectors.toList());
+        return ResponseEntity.ok(prescriptionResponseModelList);
     }
 
     @GetMapping("/status/check")

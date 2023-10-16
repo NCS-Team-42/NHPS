@@ -25,8 +25,8 @@ public class PrescriptionEntity {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public class PatientMedicationKey {
-        private String PatientNric;
-        private String MedicationId;
+    public static class PatientMedicationKey {
+        private String patientNric;
+        private String medicationId;
     }
 }

@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PrescriptionDto {
-    private String PatientNric;
-    private String MedicationId;
+    private String patientNric;
+    private String medicationId;
     private String pharmacyId;
     private int consumptionWeekly;
     private int doseLeft;
