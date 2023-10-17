@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -81,5 +81,10 @@ public class MedicationController {
         }
 
         return returnValue;
+    }
+
+    @GetMapping("/api/common/hello")
+    public String hello(@RequestHeader("Authorization") String authnHeader) {
+        return ("Hello from Medication. Authorization complete.");
     }
 }

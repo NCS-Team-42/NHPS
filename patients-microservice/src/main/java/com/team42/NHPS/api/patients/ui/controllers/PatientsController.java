@@ -11,8 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +19,7 @@ import com.team42.NHPS.api.patients.service.PatientsService;
 import com.team42.NHPS.api.patients.shared.PatientDto;
 
 import jakarta.validation.Valid;
+import org.springframework.web.client.RestTemplate;
 
 
 @RestController
@@ -82,6 +82,16 @@ public class PatientsController {
         }
 
         return returnValue;
+    }
+
+    @GetMapping("/api/common/hello")
+    public String hello(@RequestHeader("Authorization") String authnHeader) {
+        String uri = "http://localhost:8082/pharmacies/api/common/hello";
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", authnHeader);
+        HttpEntity<String> entity = new HttpEntity<>("", headers);
+        return ("Hello from Patients. " + restTemplate.exchange(uri, HttpMethod.GET, entity, String.class).getBody());
     }
 
 }
