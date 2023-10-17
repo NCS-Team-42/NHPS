@@ -10,4 +10,8 @@ public interface InventoryService {
     InventoryDto findByPharmacyIdAndMedicationId(String pharmacyId, String medicationId);
 
     List<InventoryDto> findByPharmacyId(String pharmacyId);
+
+    InventoryDto createInventory(InventoryDto inventoryDto, String authorization);
+
+    void deleteInventory(String pharmacyId, String medicationId);
 }

@@ -4,6 +4,7 @@ import com.team42.NHPS.api.pharmacy.data.InventoryEntity;
 import com.team42.NHPS.api.pharmacy.data.InventoryRespository;
 import com.team42.NHPS.api.pharmacy.exception.ResourceNotFoundException;
 import com.team42.NHPS.api.pharmacy.shared.InventoryDto;
+import com.team42.NHPS.api.pharmacy.ui.model.MedicationResponseModel;
 import com.team42.NHPS.api.pharmacy.utils.UtilsService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +19,15 @@ import java.util.stream.Collectors;
 @Service
 public class InventoryServiceImpl implements InventoryService {
     private final InventoryRespository inventoryRespository;
+    private final PharmacyService pharmacyService;
     private final UtilsService utilsService;
     private final Environment env;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public InventoryServiceImpl(InventoryRespository inventoryRespository, UtilsService utilsService, Environment env, ModelMapper modelMapper) {
+    public InventoryServiceImpl(InventoryRespository inventoryRespository, PharmacyService pharmacyService, UtilsService utilsService, Environment env, ModelMapper modelMapper) {
         this.inventoryRespository = inventoryRespository;
+        this.pharmacyService = pharmacyService;
         this.utilsService = utilsService;
         this.env = env;
         this.modelMapper = modelMapper;
@@ -72,4 +75,22 @@ public class InventoryServiceImpl implements InventoryService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public InventoryDto createInventory(InventoryDto inventoryDto, String authorization) {
+        inventoryDtoValidityCheck(inventoryDto, authorization);
+        InventoryEntity inventoryEntity = inventoryRespository.save(utilsService.mapDtoToEntity(inventoryDto));
+        return utilsService.mapEntityToDto(inventoryEntity);
+    }
+
+    @Override
+    public void deleteInventory(String pharmacyId, String medicationId) {
+        InventoryEntity inventoryEntity = utilsService.mapDtoToEntity(this.findByPharmacyIdAndMedicationId(pharmacyId, medicationId));
+        inventoryRespository.delete(inventoryEntity);
+    }
+
+    private void inventoryDtoValidityCheck(InventoryDto inventoryDto, String authorization) {
+        pharmacyService.getPharmacy(inventoryDto.getPharmacyId());
+        ParameterizedTypeReference<MedicationResponseModel> typeReference = new ParameterizedTypeReference<>() {};
+        utilsService.webClientGet(env.getProperty("medication.url"), String.format("/%s", inventoryDto.getMedicineId()), authorization, typeReference);
+    }
 }

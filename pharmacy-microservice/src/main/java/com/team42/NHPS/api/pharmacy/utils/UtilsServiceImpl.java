@@ -51,4 +51,18 @@ public class UtilsServiceImpl implements UtilsService{
         inventoryDto.setVelocityOutWeekly(inventoryEntity.getVelocityOutWeekly());
         return inventoryDto;
     }
+
+    @Override
+    public InventoryEntity mapDtoToEntity(InventoryDto inventoryDto) {
+        InventoryEntity inventoryEntity = new InventoryEntity();
+
+        InventoryEntity.PharmacyMedicationKey pharmacyMedicationKey = new InventoryEntity.PharmacyMedicationKey();
+        pharmacyMedicationKey.setMedicationId(inventoryDto.getMedicineId());
+        pharmacyMedicationKey.setPharmacyId(inventoryDto.getPharmacyId());
+        inventoryEntity.setPharmacyMedicationKey(pharmacyMedicationKey);
+        inventoryEntity.setQuantity(inventoryDto.getQuantity());
+        inventoryEntity.setVelocityInWeekly(inventoryDto.getVelocityInWeekly());
+        inventoryEntity.setVelocityOutWeekly(inventoryDto.getVelocityOutWeekly());
+        return inventoryEntity;
+    }
 }

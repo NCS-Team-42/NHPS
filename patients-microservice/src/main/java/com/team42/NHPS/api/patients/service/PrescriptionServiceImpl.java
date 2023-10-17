@@ -50,7 +50,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Override
     @Transactional
     public PrescriptionDto createPrescription(PrescriptionDto prescriptionDto, String authorization) {
-        dtoValidityCheck(prescriptionDto, authorization); // throw exception when any of the ids not found
+        prescriptionDtoValidityCheck(prescriptionDto, authorization); // throw exception when any of the ids not found
         PrescriptionEntity entity = modelMapper.map(prescriptionDto, PrescriptionEntity.class);
         PrescriptionEntity.PatientMedicationKey patientMedicationKey = new PrescriptionEntity.PatientMedicationKey(prescriptionDto.getPatientNric(), prescriptionDto.getMedicationId());
         entity.setPatientMedicationKey(patientMedicationKey);
@@ -96,6 +96,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Override
     @Transactional
     public PrescriptionDto dispenseMedication(DispenseDto dispenseDto, String authorization) {
+        dispenseDtoValidityCheck(dispenseDto, authorization);
 
         PrescriptionEntity prescriptionEntity = prescriptionRepository
                 .findByPatientMedicationKey_PatientNricAndPatientMedicationKey_MedicationId(dispenseDto.getPatientNric(), dispenseDto.getMedicationId())
@@ -142,7 +143,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 //        return returnValue;
 //    }
 
-    private void dtoValidityCheck(PrescriptionDto prescriptionDto, String authorization) {
+    private void prescriptionDtoValidityCheck(PrescriptionDto prescriptionDto, String authorization) {
         MedicationResponseModel medicationResponseModel = medicationCheck(prescriptionDto.getMedicationId(), authorization);
         if (medicationResponseModel == null)
             throw new ResourceNotFoundException("Medication", "id", prescriptionDto.getMedicationId());
@@ -150,6 +151,13 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         if (pharmacyResponseModel == null)
             throw new ResourceNotFoundException("Pharmacy", "id", prescriptionDto.getPharmacyId());
         patientsService.getPatientByNric(prescriptionDto.getPatientNric());
+    }
+
+    private void dispenseDtoValidityCheck(DispenseDto dispenseDto, String authorization) {
+        MedicationResponseModel medicationResponseModel = medicationCheck(dispenseDto.getMedicationId(), authorization);
+        if (medicationResponseModel == null)
+            throw new ResourceNotFoundException("Medication", "id", dispenseDto.getMedicationId());
+        patientsService.getPatientByNric(dispenseDto.getPatientNric());
     }
 
     private String inventoryUpdate(UpdateInventoryRequestModel updateInventoryRequestModel, String authorization) {

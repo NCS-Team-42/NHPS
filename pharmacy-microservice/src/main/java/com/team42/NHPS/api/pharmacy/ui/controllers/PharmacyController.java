@@ -139,6 +139,24 @@ public class PharmacyController {
         return ResponseEntity.ok(inventoryPharmacyResponseModel);
     }
 
+    @PostMapping("/inventory")
+    public ResponseEntity<InventoryDto> createInventory(@Valid @RequestBody InventoryDto inventoryDto, @RequestHeader("authorization") String authorization) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(inventoryService.createInventory(inventoryDto, authorization));
+    }
+
+    @PostMapping("/inventories")
+    public ResponseEntity<List<InventoryDto>> createInventory(@Valid @RequestBody List<InventoryDto> inventoryDtoList, @RequestHeader("authorization") String authorization) {
+        List<InventoryDto> createdList = new ArrayList<>();
+        inventoryDtoList.forEach(inventoryDto -> createdList.add(inventoryService.createInventory(inventoryDto, authorization)));
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdList);
+    }
+
+    @DeleteMapping("/{pharmacyId}/medication/{medicationId}")
+    public ResponseEntity<String> deleteInventory(@PathVariable String pharmacyId, @PathVariable String medicationId) {
+        inventoryService.deleteInventory(pharmacyId, medicationId);
+        return ResponseEntity.ok(String.format("Inventory with pharmacy of id %s and medication of %s deleted successfully", pharmacyId, medicationId));
+    }
+
     @GetMapping("/status/check")
     public String status(@RequestHeader("Authorization") String authorizationHeader) {
         String returnValue = "Working on port " + port + " with token " + token + ".\nToken from environment "
