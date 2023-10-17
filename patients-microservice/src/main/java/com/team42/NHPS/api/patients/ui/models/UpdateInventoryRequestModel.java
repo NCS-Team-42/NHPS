@@ -12,5 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 public class UpdateInventoryRequestModel {
     private String action;
-    private List<PrescriptionDto> prescriptionDtoList;
+    private PrescriptionDto prescriptionDto;
+    private int dispenseQuantity;
 }

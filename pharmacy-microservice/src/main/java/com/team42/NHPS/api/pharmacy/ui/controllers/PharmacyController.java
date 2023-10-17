@@ -1,5 +1,6 @@
 package com.team42.NHPS.api.pharmacy.ui.controllers;
 
+import com.team42.NHPS.api.pharmacy.service.InventoryService;
 import com.team42.NHPS.api.pharmacy.service.PharmacyService;
 import com.team42.NHPS.api.pharmacy.shared.PharmacyDto;
 import com.team42.NHPS.api.pharmacy.shared.PharmacyUserMappingDto;
@@ -34,13 +35,15 @@ public class PharmacyController {
     @Value("${server.port}")
     private String port;
     private PharmacyService pharmacyService;
+    private InventoryService inventoryService;
     private Environment environment;
     private ModelMapper modelMapper;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    public PharmacyController(PharmacyService pharmacyService, Environment environment, ModelMapper modelMapper) {
+    public PharmacyController(PharmacyService pharmacyService, InventoryService inventoryService, Environment environment, ModelMapper modelMapper) {
         this.pharmacyService = pharmacyService;
+        this.inventoryService = inventoryService;
         this.environment = environment;
         this.modelMapper = modelMapper;
     }
@@ -85,6 +88,11 @@ public class PharmacyController {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Unable to update inventory");
         }
+    }
+
+    @GetMapping("/synchronize-weekly-consumption")
+    public void synchronizeWeeklyConsumption(@RequestHeader("authorization") String authorization) {
+        inventoryService.synchronizeWeeklyConsumption(authorization);
     }
 
     @GetMapping("/status/check")

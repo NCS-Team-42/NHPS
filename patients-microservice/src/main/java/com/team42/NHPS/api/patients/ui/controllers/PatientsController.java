@@ -1,5 +1,6 @@
 package com.team42.NHPS.api.patients.ui.controllers;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.Principal;
@@ -7,10 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.team42.NHPS.api.patients.service.PrescriptionService;
+import com.team42.NHPS.api.patients.shared.DispenseDto;
 import com.team42.NHPS.api.patients.shared.PrescriptionDto;
 import com.team42.NHPS.api.patients.ui.models.PharmacyResponseModel;
 import com.team42.NHPS.api.patients.ui.models.PrescriptionResponseModel;
+import jakarta.transaction.Transactional;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +85,13 @@ public class PatientsController {
         return new ResponseEntity<>(prescriptionService.createPrescription(prescriptionDto, authorization), HttpStatus.CREATED);
     }
 
+    @PostMapping("/prescriptions")
+    @Transactional
+    public ResponseEntity<List<PrescriptionDto>> createPrescriptions(@Valid @RequestBody List<PrescriptionDto> prescriptionDtoList, @RequestHeader("Authorization") String authorization) {
+        prescriptionDtoList.stream().map(prescriptionDto -> prescriptionService.createPrescription(prescriptionDto, authorization)).collect(Collectors.toList());
+        return new ResponseEntity<>(prescriptionDtoList, HttpStatus.CREATED);
+    }
+
     @GetMapping("/{nric}/prescription")
     public ResponseEntity<List<PrescriptionResponseModel>> getPrescriptionByNric(@PathVariable String nric, @RequestHeader("Authorization") String authorization) {
         List<PrescriptionDto> prescriptionDtoList = prescriptionService.getPrescriptionByNric(nric);
@@ -83,6 +101,7 @@ public class PatientsController {
                     prescriptionResponseModel.setNric(dto.getPatientNric());
                     prescriptionResponseModel.setConsumptionWeekly(dto.getConsumptionWeekly());
                     prescriptionResponseModel.setDoseLeft(dto.getDoseLeft());
+                    prescriptionResponseModel.setPrescribedDosage(dto.getPrescribedDosage());
                     prescriptionResponseModel.setPharmacyResponseModel(prescriptionService.pharmacyCheck(dto.getPharmacyId(), authorization));
                     prescriptionResponseModel.setMedicationResponseModel(prescriptionService.medicationCheck(dto.getMedicationId(), authorization));
                     return prescriptionResponseModel;
@@ -90,10 +109,40 @@ public class PatientsController {
         return ResponseEntity.ok(prescriptionResponseModelList);
     }
 
-    @GetMapping("/process-prescription/manual/{nric}")
-    public ResponseEntity<String> processPrescriptionBatchJobManual(@PathVariable String nric, @RequestHeader("Authorization") String authorization) {
-        String returnValue = prescriptionService.batchProcessConsumption(nric, authorization);
-        return ResponseEntity.ok(returnValue);
+    @GetMapping("/prescriptions")
+    public ResponseEntity<List<PrescriptionDto>> getAllPrescriptions() {
+        return ResponseEntity.ok(prescriptionService.findAll());
+    }
+
+//    @GetMapping("/process-prescription/manual/{nric}")
+//    public ResponseEntity<String> processPrescriptionBatchJobManual(@PathVariable String nric, @RequestHeader("Authorization") String authorization) {
+//        String returnValue = prescriptionService.batchProcessConsumption(nric, authorization);
+//        return ResponseEntity.ok(returnValue);
+//    }
+
+    @PostMapping("/dispense")
+    public ResponseEntity<PrescriptionDto> dispenseMedication(@Valid @RequestBody DispenseDto dispenseDto, @RequestHeader("Authorization") String authorization) {
+        return new ResponseEntity<>(prescriptionService.dispenseMedication(dispenseDto, authorization), HttpStatus.OK);
+    }
+
+    @PostMapping("/dispenses")
+    @Transactional
+    public ResponseEntity<List<PrescriptionDto>> dispensesMedication(@Valid @RequestBody List<DispenseDto> dispenseDtoList, @RequestHeader("Authorization") String authorization) {
+        List<PrescriptionDto> prescriptionDtoList = new ArrayList<>();
+        dispenseDtoList.forEach(dispenseDto -> prescriptionDtoList.add(prescriptionService.dispenseMedication(dispenseDto, authorization)));
+        return new ResponseEntity<>(prescriptionDtoList, HttpStatus.OK);
+    }
+
+    @PostMapping("/prescriptions/weekly-sum")
+    public List<String[]> prescriptionsWeeklySum(@RequestBody List<String[]> identifierList) {
+        List<Pair<String, String>> pairList = new ArrayList<>();
+        identifierList.forEach(strings -> pairList.add(Pair.of(strings[0], strings[1])));
+        List<Triple<String, String, Integer>> tripleList = prescriptionService.checkSum(pairList);
+        List<String[]> strings = new ArrayList<>();
+        tripleList.forEach(triple -> strings.add(new String[]{
+            triple.getLeft(), triple.getMiddle(), String.valueOf(triple.getRight())
+        }));
+        return strings;
     }
 
     @GetMapping("/status/check")

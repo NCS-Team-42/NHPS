@@ -13,9 +13,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClient.UriSpec;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
 import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
+import org.springframework.web.reactive.function.client.WebClient.UriSpec;
 
 import java.util.*;
 
@@ -84,16 +84,15 @@ public class PharmacyServiceImpl implements PharmacyService {
 
     @Override
     public void updateInventory(UpdateInventoryRequestModel updateInventoryRequestModel) { // on prescribe and dispense
-        updateInventoryRequestModel.getPrescriptionDtoList().forEach(prescriptionDto -> {
-            InventoryEntity inventoryEntity = inventoryRespository.findByPharmacyMedicationKey_PharmacyIdAndPharmacyMedicationKey_MedicationId(prescriptionDto.getPharmacyId(),
-                    prescriptionDto.getMedicationId()).orElseThrow(() -> new ResourceNotFoundException("Inventory", "pharmacy and medication", prescriptionDto.getPharmacyId() + " " +
-                    prescriptionDto.getMedicationId()));
-            if ("dispense".equals(updateInventoryRequestModel.getAction())) {
-                inventoryEntity.setQuantity(inventoryEntity.getQuantity() - prescriptionDto.getConsumptionWeekly());
-            } else if ("prescribe".equals(updateInventoryRequestModel.getAction())) {
-                inventoryEntity.setVelocityOutWeekly(inventoryEntity.getVelocityOutWeekly() + prescriptionDto.getConsumptionWeekly());
-            }
-            inventoryRespository.save(inventoryEntity);
-        });
+        PrescriptionDto prescriptionDto = updateInventoryRequestModel.getPrescriptionDto();
+        InventoryEntity inventoryEntity = inventoryRespository.findByPharmacyMedicationKey_PharmacyIdAndPharmacyMedicationKey_MedicationId(prescriptionDto.getPharmacyId(),
+                prescriptionDto.getMedicationId()).orElseThrow(() -> new ResourceNotFoundException("Inventory", "pharmacy and medication", prescriptionDto.getPharmacyId() + " " +
+                prescriptionDto.getMedicationId()));
+        if ("dispense".equals(updateInventoryRequestModel.getAction())) { // update quantity
+            inventoryEntity.setQuantity(inventoryEntity.getQuantity() - updateInventoryRequestModel.getDispenseQuantity());
+        } else if ("prescribe".equals(updateInventoryRequestModel.getAction())) { // update weekly consumption forecast
+            inventoryEntity.setVelocityOutWeekly(inventoryEntity.getVelocityOutWeekly() + prescriptionDto.getConsumptionWeekly());
+        }
+        inventoryRespository.save(inventoryEntity);
     }
 }

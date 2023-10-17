@@ -20,6 +20,7 @@ public class PrescriptionEntity {
     private String pharmacyId;
     private int consumptionWeekly;
     private int doseLeft;
+    private int prescribedDosage;
 
     @Embeddable
     @Data

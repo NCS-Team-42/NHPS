@@ -11,6 +11,7 @@ public class PrescriptionResponseModel {
     private String nric;
     private int consumptionWeekly;
     private int doseLeft;
+    private int prescribedDosage;
     private PharmacyResponseModel pharmacyResponseModel;
     private  MedicationResponseModel medicationResponseModel;
 }

@@ -3,27 +3,30 @@ package com.team42.NHPS.api.patients.service;
 import com.team42.NHPS.api.patients.data.PrescriptionEntity;
 import com.team42.NHPS.api.patients.data.PrescriptionRepository;
 import com.team42.NHPS.api.patients.exception.ResourceNotFoundException;
+import com.team42.NHPS.api.patients.shared.DispenseDto;
 import com.team42.NHPS.api.patients.shared.PrescriptionDto;
 import com.team42.NHPS.api.patients.ui.models.MedicationResponseModel;
 import com.team42.NHPS.api.patients.ui.models.PharmacyResponseModel;
 import com.team42.NHPS.api.patients.ui.models.UpdateInventoryRequestModel;
 import com.team42.NHPS.api.patients.utils.UtilService;
+import jakarta.transaction.Transactional;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
-import org.springframework.web.reactive.function.client.WebClient.UriSpec;
 import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
+import org.springframework.web.reactive.function.client.WebClient.UriSpec;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PrescriptionServiceImpl implements PrescriptionService {
@@ -43,13 +46,23 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     }
 
     @Override
+    @Transactional
     public PrescriptionDto createPrescription(PrescriptionDto prescriptionDto, String authorization) {
         dtoValidityCheck(prescriptionDto, authorization); // throw exception when any of the ids not found
         PrescriptionEntity entity = modelMapper.map(prescriptionDto, PrescriptionEntity.class);
         PrescriptionEntity.PatientMedicationKey patientMedicationKey = new PrescriptionEntity.PatientMedicationKey(prescriptionDto.getPatientNric(), prescriptionDto.getMedicationId());
         entity.setPatientMedicationKey(patientMedicationKey);
+
+        Optional<PrescriptionEntity> prescriptionEntityOptional = prescriptionRepository
+                .findByPatientMedicationKey_PatientNricAndPatientMedicationKey_MedicationId(prescriptionDto.getPatientNric(), prescriptionDto.getMedicationId());
+
+        // getting delta to send to pharmacy microservice
+        prescriptionEntityOptional.ifPresent(prescription -> prescriptionDto.setConsumptionWeekly(prescriptionDto.getConsumptionWeekly() - prescription.getConsumptionWeekly()));
+
         PrescriptionEntity prescriptionEntity = prescriptionRepository.save(entity);
-        inventoryUpdate(new UpdateInventoryRequestModel("prescribe", List.of(prescriptionDto)), authorization);
+
+        inventoryUpdate(new UpdateInventoryRequestModel("prescribe", prescriptionDto, 0), authorization);
+
         return modelMapper.map(prescriptionEntity, PrescriptionDto.class);
     }
 
@@ -79,12 +92,48 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     @Transactional
-    public String batchProcessConsumption(String nric, String authorization) { // trigger stored prod. Should be a cron job, depending on prescription date and last update date
-        List<PrescriptionDto> prescriptionDtoList = getPrescriptionByNric(nric);
-        String returnValue = inventoryUpdate(new UpdateInventoryRequestModel("dispense", prescriptionDtoList), authorization);
-        prescriptionRepository.batchProcessConsumption(nric);
-        return returnValue;
+    public PrescriptionDto dispenseMedication(DispenseDto dispenseDto, String authorization) {
+
+        PrescriptionEntity prescriptionEntity = prescriptionRepository
+                .findByPatientMedicationKey_PatientNricAndPatientMedicationKey_MedicationId(dispenseDto.getPatientNric(), dispenseDto.getMedicationId())
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription", "patient nric, medication id", dispenseDto.getPatientNric() + " " + dispenseDto.getMedicationId()));
+
+        prescriptionEntity.setDoseLeft(prescriptionEntity.getDoseLeft() + dispenseDto.getQuantity());
+        prescriptionEntity.setPrescribedDosage(prescriptionEntity.getPrescribedDosage() - dispenseDto.getQuantity());
+
+        prescriptionEntity = prescriptionRepository.save(prescriptionEntity);
+
+
+        PrescriptionDto prescriptionDto = modelMapper.map(prescriptionEntity, PrescriptionDto.class);
+        inventoryUpdate(new UpdateInventoryRequestModel("dispense", prescriptionDto, dispenseDto.getQuantity()), authorization);
+        return prescriptionDto;
     }
+
+    @Override
+    public List<Triple<String, String, Integer>> checkSum(List<Pair<String, String>> pairList) {
+        List<Triple<String, String, Integer>> tripleList = new ArrayList<>();
+        pairList.forEach(pair -> {
+            tripleList.add(Triple.of(pair.getLeft(), pair.getRight(), prescriptionRepository.getSumByPharmacyIdAndMedicationId(pair.getLeft(), pair.getRight())));
+        });
+        return tripleList;
+    }
+
+    @Override
+    public List<PrescriptionDto> findAll() {
+        List<PrescriptionDto> prescriptionDtoList = new ArrayList<>();
+        Iterable<PrescriptionEntity> prescriptionEntityIterable = prescriptionRepository.findAll();
+        prescriptionEntityIterable.forEach(prescriptionEntity -> prescriptionDtoList.add(modelMapper.map(prescriptionEntity, PrescriptionDto.class)));
+        return prescriptionDtoList;
+    }
+
+//    @Override
+//    @Transactional
+//    public String batchProcessConsumption(String nric, String authorization) { // trigger stored prod. Should be a cron job, depending on prescription date and last update date
+//        List<PrescriptionDto> prescriptionDtoList = getPrescriptionByNric(nric);
+//        String returnValue = inventoryUpdate(new UpdateInventoryRequestModel("dispense", prescriptionDtoList), authorization);
+//        prescriptionRepository.batchProcessConsumption(nric);
+//        return returnValue;
+//    }
 
     private void dtoValidityCheck(PrescriptionDto prescriptionDto, String authorization) {
         MedicationResponseModel medicationResponseModel = medicationCheck(prescriptionDto.getMedicationId(), authorization);
