@@ -24,17 +24,19 @@ import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
 import org.springframework.web.reactive.function.client.WebClient.UriSpec;
 import reactor.core.publisher.Mono;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class PrescriptionServiceImpl implements PrescriptionService {
-    private PrescriptionRepository prescriptionRepository;
-    private PatientsService patientsService;
-    private UtilService utilService;
-    private ModelMapper modelMapper;
-    private Environment env;
+
+    private final PrescriptionRepository prescriptionRepository;
+    private final PatientsService patientsService;
+    private final UtilService utilService;
+    private final ModelMapper modelMapper;
+    private final Environment env;
 
     @Autowired
     public PrescriptionServiceImpl(PrescriptionRepository prescriptionRepository, PatientsService patientsService, UtilService utilService, ModelMapper modelMapper, Environment env) {
@@ -52,6 +54,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         PrescriptionEntity entity = modelMapper.map(prescriptionDto, PrescriptionEntity.class);
         PrescriptionEntity.PatientMedicationKey patientMedicationKey = new PrescriptionEntity.PatientMedicationKey(prescriptionDto.getPatientNric(), prescriptionDto.getMedicationId());
         entity.setPatientMedicationKey(patientMedicationKey);
+        entity.setPrescriptionDate(new Date(System.currentTimeMillis()));
 
         Optional<PrescriptionEntity> prescriptionEntityOptional = prescriptionRepository
                 .findByPatientMedicationKey_PatientNricAndPatientMedicationKey_MedicationId(prescriptionDto.getPatientNric(), prescriptionDto.getMedicationId());
@@ -98,11 +101,17 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .findByPatientMedicationKey_PatientNricAndPatientMedicationKey_MedicationId(dispenseDto.getPatientNric(), dispenseDto.getMedicationId())
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription", "patient nric, medication id", dispenseDto.getPatientNric() + " " + dispenseDto.getMedicationId()));
 
-        prescriptionEntity.setDoseLeft(prescriptionEntity.getDoseLeft() + dispenseDto.getQuantity());
-        prescriptionEntity.setPrescribedDosage(prescriptionEntity.getPrescribedDosage() - dispenseDto.getQuantity());
+        if (prescriptionEntity.getPrescribedDosage() > dispenseDto.getQuantity()) {
+            prescriptionEntity.setDoseLeft(prescriptionEntity.getDoseLeft() + dispenseDto.getQuantity());
+            prescriptionEntity.setPrescribedDosage(prescriptionEntity.getPrescribedDosage() - dispenseDto.getQuantity());
+            prescriptionEntity.setDispenseDate(new Date(System.currentTimeMillis()));
+        } else {
+            prescriptionEntity.setDoseLeft(prescriptionEntity.getDoseLeft() + prescriptionEntity.getPrescribedDosage());
+            dispenseDto.setQuantity(prescriptionEntity.getPrescribedDosage());
+            prescriptionEntity.setPrescribedDosage(0);
+        }
 
         prescriptionEntity = prescriptionRepository.save(prescriptionEntity);
-
 
         PrescriptionDto prescriptionDto = modelMapper.map(prescriptionEntity, PrescriptionDto.class);
         inventoryUpdate(new UpdateInventoryRequestModel("dispense", prescriptionDto, dispenseDto.getQuantity()), authorization);
@@ -112,9 +121,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Override
     public List<Triple<String, String, Integer>> checkSum(List<Pair<String, String>> pairList) {
         List<Triple<String, String, Integer>> tripleList = new ArrayList<>();
-        pairList.forEach(pair -> {
-            tripleList.add(Triple.of(pair.getLeft(), pair.getRight(), prescriptionRepository.getSumByPharmacyIdAndMedicationId(pair.getLeft(), pair.getRight())));
-        });
+        pairList.forEach(pair -> tripleList.add(Triple.of(pair.getLeft(), pair.getRight(), prescriptionRepository.getSumByPharmacyIdAndMedicationId(pair.getLeft(), pair.getRight()))));
         return tripleList;
     }
 

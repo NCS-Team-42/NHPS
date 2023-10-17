@@ -1,25 +1,13 @@
 package com.team42.NHPS.api.patients.ui.controllers;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.team42.NHPS.api.patients.service.PatientsService;
 import com.team42.NHPS.api.patients.service.PrescriptionService;
 import com.team42.NHPS.api.patients.shared.DispenseDto;
+import com.team42.NHPS.api.patients.shared.PatientDto;
 import com.team42.NHPS.api.patients.shared.PrescriptionDto;
-import com.team42.NHPS.api.patients.ui.models.PharmacyResponseModel;
 import com.team42.NHPS.api.patients.ui.models.PrescriptionResponseModel;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
@@ -27,16 +15,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import com.team42.NHPS.api.patients.service.PatientsService;
-import com.team42.NHPS.api.patients.shared.PatientDto;
-
-import jakarta.validation.Valid;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -47,9 +34,9 @@ public class PatientsController {
     private String token;
     @Value("${server.port}")
     private String port;
-    private PatientsService patientsService;
-    private PrescriptionService prescriptionService;
-    private Environment environment;
+    private final PatientsService patientsService;
+    private final PrescriptionService prescriptionService;
+    private final Environment environment;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -77,7 +64,7 @@ public class PatientsController {
 
     @PostMapping
     public ResponseEntity<PatientDto> createPatient(@Valid @RequestBody PatientDto patientDto) {
-        return new ResponseEntity(patientsService.createPatient(patientDto), HttpStatus.CREATED);
+        return new ResponseEntity<>(patientsService.createPatient(patientDto), HttpStatus.CREATED);
     }
 
     @PostMapping("/prescription")
@@ -140,7 +127,7 @@ public class PatientsController {
         List<Triple<String, String, Integer>> tripleList = prescriptionService.checkSum(pairList);
         List<String[]> strings = new ArrayList<>();
         tripleList.forEach(triple -> strings.add(new String[]{
-            triple.getLeft(), triple.getMiddle(), String.valueOf(triple.getRight())
+                triple.getLeft(), triple.getMiddle(), triple.getRight() != null ? String.valueOf(triple.getRight()) : null
         }));
         return strings;
     }

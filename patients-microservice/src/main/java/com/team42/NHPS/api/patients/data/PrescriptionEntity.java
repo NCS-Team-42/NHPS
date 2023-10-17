@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Date;
+
 @Entity
 @Table(name = "prescription")
 @Data
@@ -21,6 +23,8 @@ public class PrescriptionEntity {
     private int consumptionWeekly;
     private int doseLeft;
     private int prescribedDosage;
+    private Date prescriptionDate;
+    private Date dispenseDate;
 
     @Embeddable
     @Data

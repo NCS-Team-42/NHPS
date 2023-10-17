@@ -3,31 +3,29 @@ package com.team42.NHPS.api.pharmacy.service;
 import com.team42.NHPS.api.pharmacy.data.InventoryEntity;
 import com.team42.NHPS.api.pharmacy.data.InventoryRespository;
 import com.team42.NHPS.api.pharmacy.exception.ResourceNotFoundException;
-import com.team42.NHPS.api.pharmacy.shared.PrescriptionDto;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
+import com.team42.NHPS.api.pharmacy.shared.InventoryDto;
+import com.team42.NHPS.api.pharmacy.utils.UtilsService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class InventoryServiceImpl implements InventoryService {
-    private InventoryRespository inventoryRespository;
-    private Environment env;
-    private ModelMapper modelMapper;
+    private final InventoryRespository inventoryRespository;
+    private final UtilsService utilsService;
+    private final Environment env;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public InventoryServiceImpl(InventoryRespository inventoryRespository, Environment env, ModelMapper modelMapper) {
+    public InventoryServiceImpl(InventoryRespository inventoryRespository, UtilsService utilsService, Environment env, ModelMapper modelMapper) {
         this.inventoryRespository = inventoryRespository;
+        this.utilsService = utilsService;
         this.env = env;
         this.modelMapper = modelMapper;
     }
@@ -40,26 +38,38 @@ public class InventoryServiceImpl implements InventoryService {
             InventoryEntity.PharmacyMedicationKey pharmacyMedicationKey = inventoryEntity.getPharmacyMedicationKey();
             identifierList.add(new String[]{pharmacyMedicationKey.getPharmacyId(), pharmacyMedicationKey.getMedicationId()});
         });
-        List<String[]> returnValue = prescriptionsWeeklySum(identifierList, authorization);
+
+        ParameterizedTypeReference<List<String[]>> requestTypeReference = new ParameterizedTypeReference<>() {
+        };
+        List<String[]> returnValue = utilsService.webClientPost(env.getProperty("patients.url"), "/prescriptions/weekly-sum", identifierList, authorization, requestTypeReference, requestTypeReference);
+
         returnValue.forEach(entry -> {
             InventoryEntity inventoryEntity = inventoryRespository.findByPharmacyMedicationKey_PharmacyIdAndPharmacyMedicationKey_MedicationId(entry[0], entry[1])
                     .orElseThrow(() -> new ResourceNotFoundException("Inventory", "pharmacy and medication", entry[0] + " " + entry[1]));
-            if (!"null".equals(entry[2])) {
+            if (entry[2] != null) {
                 inventoryEntity.setVelocityOutWeekly(Integer.parseInt(entry[2]));
+            } else {
+                inventoryEntity.setVelocityOutWeekly(0);
             }
             inventoryRespository.save(inventoryEntity);
         });
     }
 
-    private List<String[]> prescriptionsWeeklySum(List<String[]> identifierList, String authorization) {
-        return WebClient.create(env.getProperty("patients.url"))
-                .method(HttpMethod.POST).uri("/prescriptions/weekly-sum")
-                .header(HttpHeaders.AUTHORIZATION, authorization)
-                .body(Mono.just(identifierList), new ParameterizedTypeReference<>() {
-                })
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<String[]>>() {
-                })
-                .block();
+    @Override
+    public InventoryDto findByPharmacyIdAndMedicationId(String pharmacyId, String medicationId) {
+        InventoryEntity inventoryEntity = inventoryRespository
+                .findByPharmacyMedicationKey_PharmacyIdAndPharmacyMedicationKey_MedicationId(pharmacyId, medicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pharmacy or medication", "id", pharmacyId + " " + medicationId));
+        InventoryDto inventoryDto = utilsService.mapEntityToDto(inventoryEntity);
+        return inventoryDto;
     }
+
+    @Override
+    public List<InventoryDto> findByPharmacyId(String pharmacyId) {
+        List<InventoryEntity> inventoryEntityList = inventoryRespository.findByPharmacyMedicationKey_PharmacyId(pharmacyId);
+        return inventoryEntityList.stream()
+                .map(utilsService::mapEntityToDto)
+                .collect(Collectors.toList());
+    }
+
 }
