@@ -67,6 +67,13 @@ public class PatientsController {
         return new ResponseEntity<>(patientsService.createPatient(patientDto), HttpStatus.CREATED);
     }
 
+    @PostMapping("/multiple")
+    public ResponseEntity<List<PatientDto>> createPatients(@Valid @RequestBody List<PatientDto> patientDtoList) {
+        List<PatientDto> patientDtos = new ArrayList<>();
+        patientDtoList.forEach(patientDto -> patientDtos.add(patientsService.createPatient(patientDto)));
+        return new ResponseEntity<>(patientDtos, HttpStatus.CREATED);
+    }
+
     @PostMapping("/prescription")
     public ResponseEntity<PrescriptionDto> createPrescription(@Valid @RequestBody PrescriptionDto prescriptionDto, @RequestHeader("Authorization") String authorization) {
         return new ResponseEntity<>(prescriptionService.createPrescription(prescriptionDto, authorization), HttpStatus.CREATED);
