@@ -7,6 +7,7 @@ import com.team42.NHPS.api.patients.shared.PatientDto;
 import com.team42.NHPS.api.patients.utils.UtilService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -44,6 +45,9 @@ public class PatientsServiceImpl implements PatientsService {
 
     @Override
     public PatientDto createPatient(PatientDto patientDto) {
+        if (patientsRepository.findByNricOrEmail(patientDto.getNric(), patientDto.getEmail()) != null) {
+            throw new DataIntegrityViolationException("Patient already exist");
+        }
         PatientEntity patientEntity = patientsRepository.save(modelMapper.map(patientDto, PatientEntity.class));
         return modelMapper.map(patientEntity, PatientDto.class);
     }

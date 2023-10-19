@@ -7,5 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface PatientsRepository extends CrudRepository<PatientEntity, Long> {
 	Optional<PatientEntity> findByNric(String nric);
+
+    PatientEntity findByNricOrEmail(String nric, String email);
 }
 
