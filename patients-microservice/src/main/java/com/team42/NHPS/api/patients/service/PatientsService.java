@@ -10,7 +10,10 @@ public interface PatientsService {
 
 	PatientDto createPatient(PatientDto patientDto);
 
+	PatientDto editPatient(PatientDto patientDto);
+
 	PatientDto getPatientByNric(String nric);
 
 	void deletePatient(String nric);
+
 }

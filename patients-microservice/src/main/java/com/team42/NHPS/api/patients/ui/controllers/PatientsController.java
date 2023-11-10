@@ -67,6 +67,11 @@ public class PatientsController {
         return new ResponseEntity<>(patientsService.createPatient(patientDto), HttpStatus.CREATED);
     }
 
+    @PutMapping
+    public ResponseEntity<PatientDto> editPatient(@Valid @RequestBody PatientDto patientDto) {
+        return new ResponseEntity<>(patientsService.editPatient(patientDto), HttpStatus.OK);
+    }
+
     @PostMapping("/multiple")
     public ResponseEntity<List<PatientDto>> createPatients(@Valid @RequestBody List<PatientDto> patientDtoList) {
         List<PatientDto> patientDtos = new ArrayList<>();

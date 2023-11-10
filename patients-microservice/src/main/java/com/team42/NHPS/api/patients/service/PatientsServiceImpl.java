@@ -53,6 +53,12 @@ public class PatientsServiceImpl implements PatientsService {
     }
 
     @Override
+    public PatientDto editPatient(PatientDto patientDto) {
+        PatientEntity patientEntity = patientsRepository.save(modelMapper.map(patientDto, PatientEntity.class));
+        return modelMapper.map(patientEntity, PatientDto.class);
+    }
+
+    @Override
     public void deletePatient(String nric) {
         PatientDto patientDto = this.getPatientByNric(nric);
         patientsRepository.delete(modelMapper.map(patientDto, PatientEntity.class));
